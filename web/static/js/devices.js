@@ -1,110 +1,245 @@
-class DevicesManager {
+class DeviceManager {
     constructor() {
         this.devicesList = document.querySelector('.devices-list');
-        this.devices = new Map();
-        this.init();
-    }
-
-    init() {
-        // Initialize WebSocket connection
-        this.connectWebSocket();
-        // Update devices status periodically
-        setInterval(() => this.updateDevicesStatus(), 30000);
-    }
-
-    connectWebSocket() {
-        // Replace with your WebSocket server URL
-        const ws = new WebSocket('ws://your-server-url/ws');
-
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            this.updateDevice(data);
-        };
-    }
-
-    updateDevice(deviceData) {
-        const deviceId = deviceData.id;
+        this.historyOutput = document.querySelector('#history-output');
+        this.updateDevices();
+        this.updateHistory();
+        this.updateInterval = setInterval(() => this.updateDevices(), 300000);
         
-        if (!this.devices.has(deviceId)) {
-            // Create new device card
-            const deviceCard = this.createDeviceCard(deviceData);
-            this.devicesList.appendChild(deviceCard);
-            this.devices.set(deviceId, deviceCard);
-        } else {
-            // Update existing device card
-            this.updateDeviceCard(this.devices.get(deviceId), deviceData);
+        // Add OS button listener
+        const macButton = document.querySelector('.os-type-item[data-os="macos"]');
+        if (macButton) {
+            macButton.addEventListener('click', () => this.connectDevice('macos'));
         }
     }
 
-    createDeviceCard(device) {
-        const card = document.createElement('div');
-        card.className = 'device-card';
-        card.innerHTML = `
-            <div class="device-header">
-                <i class="device-icon fab ${this.getOSIcon(device.os)}"></i>
-                <span class="device-name">${device.name}</span>
-            </div>
-            <div class="device-info">
-                <div class="device-detail">
-                    <span>OS:</span>
-                    <span>${device.os}</span>
-                </div>
-                <div class="device-detail">
-                    <span>IP:</span>
-                    <span>${device.ip}</span>
-                </div>
-                <div class="device-detail">
-                    <span>Last Active:</span>
-                    <span>${this.formatDate(device.lastActive)}</span>
-                </div>
-                <div class="device-detail">
-                    <span>Status:</span>
-                    <div class="device-status">
-                        <div class="status-indicator ${device.active ? 'status-active' : 'status-inactive'}"></div>
-                        <span>${device.active ? 'Active' : 'Inactive'}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        return card;
+    async connectDevice(osType) {
+        try {
+            const response = await fetch('http://localhost:5001/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ osType })
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                this.updateDevices();
+                // Update button state
+                const button = document.querySelector(`.os-type-item[data-os="${osType}"]`);
+                if (button) {
+                    button.classList.add('selected');
+                    button.disabled = true;
+                }
+            }
+        } catch (error) {
+            console.error('Error connecting device:', error);
+        }
     }
 
-    updateDeviceCard(card, device) {
-        // Update status indicator
-        const statusIndicator = card.querySelector('.status-indicator');
-        statusIndicator.className = `status-indicator ${device.active ? 'status-active' : 'status-inactive'}`;
+    async updateDevices() {
+        try {
+            const response = await fetch('http://localhost:5001/devices');
+            const data = await response.json();
+            this.renderDevices(data.devices);
+        } catch (error) {
+            console.error('Error fetching devices:', error);
+            this.devicesList.innerHTML = '<p>Error loading devices</p>';
+        }
+    }
+
+    async toggleLogging(deviceId, action) {
+        try {
+            const response = await fetch(`http://localhost:5001/${action}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ deviceId })
+            });
+            const data = await response.json();
+            await this.updateDevices();
+            return data;
+        } catch (error) {
+            console.error(`Error ${action} logging:`, error);
+        }
+    }
+
+    formatLogData(logs) {
+        if (!logs) return 'No logs available';
         
-        // Update last active time
-        const lastActive = card.querySelector('.device-detail:nth-child(3) span:last-child');
-        lastActive.textContent = this.formatDate(device.lastActive);
+        // Basic formatting for readability
+        const formattedLogs = logs
+            .replace(/\[←\]/g, '⌫')
+            .replace(/\[→\]/g, '→')
+            .replace(/\[↑\]/g, '↑')
+            .replace(/\[↓\]/g, '↓')
+            .replace(/\[CAPS\]/g, '⇪')
+            .replace(/\n/g, '\n');
+
+        return `<div class="log-content">${formattedLogs}</div>`;
     }
 
-    getOSIcon(os) {
-        const osLower = os.toLowerCase();
-        if (osLower.includes('windows')) return 'fa-windows';
-        if (osLower.includes('mac')) return 'fa-apple';
-        if (osLower.includes('linux')) return 'fa-linux';
-        return 'fa-desktop';
-    }
-
-    formatDate(date) {
-        return new Date(date).toLocaleString();
-    }
-
-    updateDevicesStatus() {
-        // Check for inactive devices
-        const now = Date.now();
-        this.devices.forEach((card, deviceId) => {
-            const lastActive = new Date(card.querySelector('.device-detail:nth-child(3) span:last-child').textContent);
-            const inactive = (now - lastActive) > 5 * 60 * 1000; // 5 minutes threshold
+    async viewLogs(deviceId, button) {
+        try {
+            const logOutput = document.querySelector(`#logs-${deviceId}`);
+            const isDecrypted = button.dataset.decrypted === 'true';
             
-            const statusIndicator = card.querySelector('.status-indicator');
-            statusIndicator.className = `status-indicator ${inactive ? 'status-inactive' : 'status-active'}`;
+            logOutput.innerHTML = 'Loading logs...';
+            button.disabled = true;
+            
+            const endpoint = isDecrypted ? 'logs' : 'logs/decrypted';
+            const response = await fetch(`http://localhost:5001/${endpoint}/${deviceId}`);
+            const data = await response.json();
+            
+            logOutput.innerHTML = this.formatLogData(data.logs);
+            
+            button.textContent = isDecrypted ? 'View Decrypted Logs' : 'View Encrypted Logs';
+            button.dataset.decrypted = !isDecrypted;
+            button.disabled = false;
+        } catch (error) {
+            console.error('Error fetching logs:', error);
+            logOutput.innerHTML = 'Error loading logs';
+            logOutput.disabled = false;
+        }
+    }
+
+    async updateHistory() {
+        try {
+            const response = await fetch('http://localhost:5001/history');
+            const data = await response.json();
+            this.renderHistory(data.history);
+        } catch (error) {
+            console.error('Error fetching history:', error);
+            this.historyOutput.innerHTML = '<p>Error loading history</p>';
+        }
+    }
+
+    renderHistory(history) {
+        this.historyOutput.innerHTML = '';
+        
+        if (history.length === 0) {
+            this.historyOutput.innerHTML = '<p>No history available</p>';
+            return;
+        }
+
+        history.forEach((entry, index) => {
+            const historyElement = document.createElement('div');
+            historyElement.className = 'history-entry';
+            
+            // Create header
+            const header = document.createElement('div');
+            header.className = 'history-header';
+            header.innerHTML = `
+                <div class="history-summary">
+                    <span class="history-date">${entry.date}</span>
+                    <span class="history-device">ID: ${entry.deviceId}</span>
+                </div>
+                <span class="history-toggle">▼</span>
+            `;
+
+            // Create content
+            const content = document.createElement('div');
+            content.className = 'history-content';
+            content.style.display = 'none';  // Initially hidden
+            content.innerHTML = `<pre>${entry.content}</pre>`;
+
+            // Add click handler
+            header.onclick = function() {
+                const isVisible = content.style.display === 'block';
+                content.style.display = isVisible ? 'none' : 'block';
+                this.querySelector('.history-toggle').style.transform = 
+                    isVisible ? 'rotate(0)' : 'rotate(180deg)';
+            };
+
+            // Append elements
+            historyElement.appendChild(header);
+            historyElement.appendChild(content);
+            this.historyOutput.appendChild(historyElement);
+        });
+    }
+
+    async deactivateDevice(deviceId) {
+        try {
+            const response = await fetch(`http://localhost:5001/deactivate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ deviceId })
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                // Re-enable OS button
+                const button = document.querySelector('.os-type-item.selected');
+                if (button) {
+                    button.classList.remove('selected');
+                    button.disabled = false;
+                }
+                await this.updateDevices();
+                await this.updateHistory();
+            }
+            return data;
+        } catch (error) {
+            console.error('Error deactivating device:', error);
+        }
+    }
+
+    renderDevices(devices) {
+        this.devicesList.innerHTML = '';
+        
+        if (devices.length === 0) {
+            this.devicesList.innerHTML = '<p>No devices connected</p>';
+            return;
+        }
+
+        devices.forEach(device => {
+            const deviceElement = document.createElement('div');
+            deviceElement.className = 'device-item';
+            deviceElement.innerHTML = `
+                <div class="device-info">
+                    <span class="device-name">${device.name}</span>
+                    <span class="device-id">ID: ${device.id}</span>
+                    <span class="device-status ${device.status}">${device.status}</span>
+                </div>
+                <div class="device-details">
+                    <span>OS: ${device.os}</span>
+                    <span>Last Active: ${device.lastActive}</span>
+                </div>
+                <div class="device-controls">
+                    <button onclick="deviceManager.toggleLogging('${device.id}', 'start')" 
+                            class="control-btn start-btn" 
+                            ${device.status === 'active' ? 'disabled' : ''}>
+                        Start Logging
+                    </button>
+                    <button onclick="deviceManager.toggleLogging('${device.id}', 'stop')" 
+                            class="control-btn stop-btn"
+                            ${device.status === 'inactive' ? 'disabled' : ''}>
+                        Stop Logging
+                    </button>
+                    <button onclick="deviceManager.viewLogs('${device.id}', this)" 
+                            class="control-btn view-btn"
+                            data-decrypted="false">
+                        View Decrypted Logs
+                    </button>
+                    <button onclick="deviceManager.deactivateDevice('${device.id}')" 
+                            class="control-btn deactivate-btn">
+                        Deactivate Device
+                    </button>
+                </div>
+                <div class="device-logs">
+                    <pre id="logs-${device.id}" class="logs-output"></pre>
+                </div>
+            `;
+            this.devicesList.appendChild(deviceElement);
         });
     }
 }
 
-// Initialize devices manager when DOM is loaded
+// Make deviceManager globally accessible
+window.deviceManager = null;
+
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new DevicesManager();
+    window.deviceManager = new DeviceManager();
 }); 

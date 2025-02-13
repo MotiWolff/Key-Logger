@@ -40,3 +40,13 @@ body {
     padding: 20px;
     border: 2px solid green;
 }
+
+.os-type-item.selected {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

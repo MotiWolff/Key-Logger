@@ -6,8 +6,9 @@ from .interfaces import IWriter
 from ..encryption.encryptor import Encryptor
 
 class FileWriter(IWriter):
-    def __init__(self, base_path: str = "logs", encryption_key: str = "default_key"):
-        self.base_path = base_path
+    def __init__(self, encryption_key: str = "default_key", base_path: str = None):
+        # Set base_path to backend/data if not specified
+        self.base_path = base_path or os.path.join('backend', 'data')
         self.current_file = None
         self.current_date = None
         self.encryptor = Encryptor(encryption_key)
@@ -16,7 +17,7 @@ class FileWriter(IWriter):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
         
-        # Ensure log directory exists
+        # Ensure data directory exists
         self._ensure_log_directory()
     
     def _ensure_log_directory(self) -> None:

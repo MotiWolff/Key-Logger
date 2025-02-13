@@ -1,0 +1,214 @@
+/* ... previous styles ... */
+
+.device-controls {
+    display: flex;
+    justify-content: flex-start;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    min-width: 120px;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.start-btn {
+    background: #10b981;
+    color: white;
+}
+
+.start-btn:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.stop-btn {
+    background: #ef4444;
+    color: white;
+}
+
+.stop-btn:hover:not(:disabled) {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.view-btn {
+    background: #3b82f6;
+    color: white;
+    min-width: 150px; /* Ensure enough space for text */
+}
+
+.view-btn:hover:not(:disabled) {
+    background: #2563eb;
+}
+
+.decrypt-btn {
+    background: #8b5cf6;
+    color: white;
+}
+
+.decrypt-btn:hover {
+    background: #7c3aed;
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Add icons to buttons */
+.control-btn::before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+}
+
+.start-btn::before {
+    content: "\f04b"; /* Play icon */
+}
+
+.stop-btn::before {
+    content: "\f04d"; /* Stop icon */
+}
+
+.view-btn::before {
+    content: "\f06e"; /* Eye icon */
+}
+
+.decrypt-btn::before {
+    content: "\f023"; /* Lock icon */
+}
+
+.view-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+/* Log Container Styles */
+.log-container {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.log-section {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.75rem;
+}
+
+.log-section:last-child {
+    border-bottom: none;
+}
+
+.log-timestamp {
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.log-timestamp i {
+    font-size: 0.9rem;
+}
+
+.log-content {
+    color: #1e293b;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Special Key Styling */
+.key-special {
+    display: inline-block;
+    padding: 0 0.25rem;
+    margin: 0 0.1rem;
+    background: #f1f5f9;
+    border-radius: 4px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Loading State */
+.loading-logs {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
+}
+
+/* Error State */
+.log-error {
+    text-align: center;
+    padding: 2rem;
+    color: #ef4444;
+}
+
+/* Scrollbar Styling */
+.log-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.log-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.log-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.log-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Log Section Hover Effect */
+.log-section:hover {
+    background: #f8fafc;
+}
+
+.device-logs {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.log-content {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #1e293b;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.deactivate-btn {
+    background: #6b7280;
+    color: white;
+}
+
+.deactivate-btn:hover {
+    background: #4b5563;
+}
