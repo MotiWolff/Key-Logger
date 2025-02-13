@@ -24,6 +24,11 @@ This project is designated for educational purposes. Do not use this project for
         - Encryptor: In charge of doing XOR or other encryption.
 
 ## Step 1: Implementing KeyLoggerService:
+First of all:
+There will be 3 files for the keylogger, one for each os type. 
+the app.py in the backend side will ask the user on the frontend side (using buttons) which OS to use.
+
+
 At this point, we will align and implement the KeyLoggerService in a uniform interface. The goal is to create a class that listens to keyboard keystrokes and temporarily stores them in memory (Buffer) for later use.
 
 - Implementation Requirements:
