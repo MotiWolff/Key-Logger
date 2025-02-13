@@ -1,0 +1,42 @@
+body {
+    font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+    color: var(--kod-light-gray);
+}
+
+:root {
+  /* Main colors from logo */
+  --kod-black: #000000;
+  --kod-purple: #7B68EE;    /* Adjust this hex value to match exact purple */
+  --kod-turquoise: #40E0D0; /* Adjust this hex value to match exact turquoise */
+  
+  /* Additional complementary colors */
+  --kod-white: #FFFFFF;
+  --kod-light-gray: #F5F5F5;
+  --kod-dark-gray: #333333;
+}
+
+#keylogger-output {
+    border: 2px solid blue; /* Debug border */
+    display: block;
+    white-space: pre-wrap;
+    font-family: monospace;
+    padding: 20px;
+    margin: 10px;
+    min-height: 200px;
+    background-color: #f5f5f5;
+    overflow-y: auto;
+}
+
+.logs-container {
+    border: 2px solid red; /* Debug border */
+    margin: 20px;
+    padding: 20px;
+    min-height: 300px;
+}
+
+/* Debug styles to ensure sections are visible */
+.section-container {
+    margin: 20px;
+    padding: 20px;
+    border: 2px solid green;
+}
