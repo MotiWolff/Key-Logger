@@ -1,8 +1,34 @@
-source venv/bin/activate
-pip install -r requirements.txt
-python tests/test_mac_keylogger.py  
+# # Must run this command to activate the virtual environment
+# source venv/bin/activate
+
+# # Create the necessary files
+touch src/__init__.py
+touch src/encryption/__init__.py
+touch src/keylogger/__init__.py
+touch src/writers/__init__.py
+
+# # Run the app
+# PYTHONPATH=$PWD python backend/app.py
+
+# # Install the requirements
+# pip install -r requirements.txt
+
+# # Run the tests
+# python tests/test_mac_keylogger.py  
+
+# Core dependencies
 flask==3.0.0
 flask-cors==4.0.0
 pynput==1.7.6
-cryptography==41.0.7
+cryptography==41.0.1
+pymongo==4.5.0
 python-dotenv==1.0.0
+websockets==11.0.3
+
+# Testing
+pytest==7.4.0
+pytest-cov==4.1.0
+
+# Development
+black==23.7.0
+flake8==6.1.0

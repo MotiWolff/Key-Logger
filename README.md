@@ -6,6 +6,38 @@ This project will be an fully functional system based on these 3 parts:
 - Backend Side: Flask server that gets, decrypts and saves the data.
 - Frontend (UI): A webpage that shows the data gathered in a nice way.
 
+
+### Must Have Features
+## KeyLogger Agent:
+- Run on the target machine.
+- Get the keystrokes.
+- Encrypt the keystrokes.
+- Send the data to the server.
+
+## Backend Side:
+- Run on the server.
+- Get the data.
+- Decrypt the data.
+- Save the data.
+
+## Frontend (UI):
+- Run on the client.
+- Show the data.
+- Have header
+- Have dark/light theme
+- Responsive
+- Use Font Awesome for icons
+- Enables choosing OS to run the keylogger on.
+- When OS button is pressed, the keylogger is started.
+- After starting, the connected device details will be shown on the connected devices list with 4 buttons: start logging, stop logging, show logs, deactivate device.
+- The logs will be displayed in a scrollable area and the date, time and keystrokes will be shown, with button to see encrypted data and button to see decrypted data.
+- the encrypted data will be stored on a mongodb cluster database.
+- the decrypted data will be stored on a mongodb cluster database, and also will be visible in the history section as items based on id and timestamp.
+- deactivating the device will remove it from the connected devices list.
+- the server will be able to get the computer list and the keystrokes of each computer.
+
+
+
 ### Legal Issues
 This project is designated for educational purposes. Do not use this project for illegal or unethical uses. The work is executed on local enviroment only and with computer owners permission. 
 

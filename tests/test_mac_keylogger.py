@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from src.keylogger.mac_keylogger import MacKeyLogger
 from src.writers.file_writer import FileWriter
 import time
@@ -32,4 +35,4 @@ def test_keylogger():
         print(f"Error: {e}")
         
 if __name__ == "__main__":
-    test_keylogger() 
+    test_keylogger()

