@@ -229,45 +229,32 @@ def get_history():
 @app.route('/deactivate', methods=['POST'])
 def deactivate_device():
     try:
-        data = request.get_json()
+        data = request.json
         device_id = data.get('deviceId')
         
-        if hasattr(app, 'device_id') and app.device_id == device_id:
-            # Stop the keylogger if it's running
-            if hasattr(app, 'manager') and app.manager.running:
-                app.manager.stop()
+        if not device_id:
+            raise ValueError("Device ID is required")
             
-            # Move logs to history
-            current_log = os.path.join('backend', 'data', f"keylog_{time.strftime('%Y-%m-%d')}.txt")
-            if os.path.exists(current_log):
-                history_folder = os.path.join('backend', 'data', device_id)
-                os.makedirs(history_folder, exist_ok=True)
-                
-                # Move file to history with timestamp
-                history_file = os.path.join(
-                    history_folder, 
-                    f"keylog_{time.strftime('%Y-%m-%d_%H-%M-%S')}.txt"
-                )
-                os.rename(current_log, history_file)
+        if device_id not in active_devices:
+            raise ValueError("Device not found")
             
-            # Remove from active devices and clear device ID
-            if device_id in app.active_devices:
-                app.active_devices.remove(device_id)
-            if hasattr(app, 'device_id'):
-                delattr(app, 'device_id')
+        # Stop logging if active
+        if active_devices[device_id].get('status') == 'active':
+            # Add any cleanup needed here
+            pass
             
-            return jsonify({
-                "status": "success",
-                "message": "Device deactivated and logs archived"
-            }), 200
-            
-        return jsonify({
-            "status": "error",
-            "message": "Device not found"
-        }), 404
+        # Remove device from active devices
+        del active_devices[device_id]
         
+        return jsonify({
+            'status': 'success',
+            'message': 'Device deactivated successfully'
+        })
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 404
 
 @app.route('/connect', methods=['POST'])
 def connect_device():
